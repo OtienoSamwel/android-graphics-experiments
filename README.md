@@ -4,7 +4,7 @@ Graphics tinkering in android
 
 # Simple orbitals  Experiment #01
 
-Simulating orbital motion about a fixed point using the Jetpack compose canvas and Kotlin coroutines and some math equations.
+Simulating orbital motion about a fixed point using the Jetpack Compose canvas, Kotlin coroutines, and some math equations.
 
 # Future additions
 - Path trace for orbital objects
