@@ -14,12 +14,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.otienosamwel.android_graphics_experiments.ui.theme.AndroidgraphicsexperimentsTheme
@@ -30,7 +33,11 @@ import kotlin.math.sin
 
 @Composable
 fun Orbitals() {
-    val infiniteTransition = rememberInfiniteTransition()
+    val infiniteTransition = rememberInfiniteTransition(label = "animate sizes")
+
+    var pathPoints by remember { mutableStateOf(listOf(Pair(0f, 0f))) }
+
+    val orbitalPathOne by remember { mutableStateOf(Path()) }
 
     val animatedSize = infiniteTransition.animateFloat(
         initialValue = 1F,
@@ -73,22 +80,29 @@ fun Orbitals() {
     var offSetY1 by remember { mutableStateOf(0.dp) }
 
 
-    var time by remember { mutableStateOf(0F) }
+    var time by remember { mutableFloatStateOf(0F) }
 
     LaunchedEffect(Unit) {
         while (true) {
             time += 0.01F
-            val next = computeNextPoint(
-                radius = 100F, time = time
-            )
-
+            val next = computeNextPoint(radius = 100F, time = time)
             val next1 = computeNextPoint(radius = 200F, time = time + 4)
             offSetX = next.x.dp
             offSetY = next.y.dp
-
             offSetX1 = next1.x.dp
             offSetY1 = next.y.dp
 
+            //path for orbital once
+            pathPoints =
+                addAndRemove(list = pathPoints, newValue = Pair(offSetX1.value, offSetY1.value))
+
+            //trace the path
+            pathPoints.forEachIndexed { index: Int, item: Pair<Float, Float> ->
+                if (index == 0) orbitalPathOne.moveTo(
+                    item.first,
+                    item.second
+                ) else orbitalPathOne.lineTo(item.first, item.second)
+            }
             delay(10)
         }
     }
@@ -117,6 +131,13 @@ fun Orbitals() {
                 size.height / 2 + offSetY1.toPx()
             )
         )
+
+
+
+        translate(left = size.width / 2, top = size.height / 2) {
+            drawPath(path = orbitalPathOne, color = Color.Blue)
+            //drawCircle(color = Color.White)
+        }
     }
 }
 
@@ -145,4 +166,18 @@ fun computeNextPoint(
     val newXOffset = (radius * cos(angularVelocity * time))
     val newYOffset = (radius * sin(angularVelocity * time))
     return Offset(newXOffset, newYOffset)
+}
+
+
+fun addAndRemove(
+    list: List<Pair<Float, Float>>,
+    newValue: Pair<Float, Float>
+): List<Pair<Float, Float>> {
+    val finalList = list.toMutableList().also {
+        if (it.size > 30) {
+            it.removeAt(0)
+        }
+        it.add(newValue)
+    }
+    return finalList.toList()
 }
